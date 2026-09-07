@@ -1,0 +1,4 @@
+# Nothing host-specific lives in this repo — it is pure library code.
+# Editor / OS noise only.
+.DS_Store
+*.swp
