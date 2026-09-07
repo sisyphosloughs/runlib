@@ -40,6 +40,7 @@ git add lib/runlib && git commit -m "runlib: update"
 |---|---|
 | `log.sh` | `LOG_FILE`, `ERRORS[]`, `log_init`, `log_rotate`, `log_info/warn/error/plain`, `fatal`, `log_tail` |
 | `util.sh` | `contains`, `is_truthy`, `human_duration`, `human_bytes`, `bytes_newer_than`, `abs_path`, `is_inside` |
+| `cmd.sh` | `cmd_run`, `cmd_format`, `cmd_quote` — run a command and put it in the log, in one step |
 | `lock.sh` | `acquire_lock` — advisory flock, degrades to a warning where flock is missing |
 | `notify.sh` | `notify_init`, `telegram_configured`, `telegram_send`, `notify_check_binaries` |
 | `config.sh` | `instances_load`, `instances_record` — the "one *.conf per object" loader |
@@ -56,6 +57,51 @@ brings its own `log()` that writes to **stderr only**, because such libraries
 return values through stdout (`cid="$(_resolve_container …)"`) and a diagnostic
 on that channel would corrupt the value. Both libraries end up in the same
 shell, so the names have to stay apart.
+
+## Documenting the command that ran
+
+`cmd_run` logs an argument vector and then executes it. One call, so the logged
+line cannot drift from the real one — the failure mode it exists to prevent:
+
+```bash
+local CMD_PREFIX="${name}: "        # optional, prefixes the line
+cmd_run "${tar_cmd[@]}" "${opts[@]}"
+```
+
+It returns the command's own exit status, so `|| rc=$?`, `if …` and
+`PIPESTATUS[0]` keep working exactly as they did around the bare call.
+
+**`cmd_run` never writes to stdout** — the line goes to stderr only. That is
+what makes it safe to wrap a command whose stdout carries payload:
+
+```bash
+cmd_run docker exec … "$cid" sh -c "$s" > "$target"   # dump, not a log line
+cmd_run "$TAR_BIN" --list --file "$a" >/dev/null      # listing discarded
+cmd_run restic … --json | parse_summary               # JSON stays JSON
+```
+
+Two things it gets right that a hand-written log line does not:
+
+- **Quoting.** `"${opts[*]}"` renders `--use-compress-program` plus
+  `zstd -3 -T0` as four separate-looking arguments. `cmd_format` quotes only
+  what needs it, so the line says what ran and can be pasted into a shell.
+- **Redaction.** `NAME=VALUE` pairs whose name looks like a credential become
+  `NAME=***`, and `scheme://user:pass@host` becomes `scheme://user:***@host`.
+  An *empty* value stays visible, so the log still distinguishes "was not set"
+  from "was set and hidden". A `…_FILE` name is a path, not a secret, and is
+  left alone. Extend the name patterns through `CMD_REDACT_EXTRA`.
+
+This matters because `log_init` makes the log world-readable (`chmod 644`) on
+the promise that it holds paths and sizes, not secrets.
+
+`cmd_format` alone returns the formatted line on stdout, for the rare case
+where something must be documented without being run here.
+
+`cmd_quote` returns ONE argument as a shell word, quoted only where it has to
+be. Use it when a caller assembles a command line for another shell — the
+database dumps build an `sh -c` line whose user and database names come from
+the container. Quoting them with the same rule the log uses is what keeps the
+logged line and the executed line the same text.
 
 ## Shape of a script using it
 
