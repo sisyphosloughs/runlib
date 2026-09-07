@@ -3,7 +3,7 @@
 # util.sh — small, dependency-free helpers: predicates, formatting, path maths.
 #
 # Origin: contains/is_truthy/human_duration/human_bytes/bytes_newer_than are
-# taken verbatim from lib/common-lib.sh of docker-db-dump; abs_path/is_inside
+# taken verbatim from lib/common-lib.sh of backup-docker-db; abs_path/is_inside
 # from tar-backup.sh, where they were the only correct containment check of the
 # family (docker-db-dump.sh compared raw string prefixes, which a relative path
 # or a "/../" defeats).

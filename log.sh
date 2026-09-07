@@ -2,7 +2,7 @@
 #
 # log.sh — the per-run log file and the error account.
 #
-# Origin: extracted verbatim from lib/common-lib.sh of docker-db-dump, which was
+# Origin: extracted verbatim from lib/common-lib.sh of backup-docker-db, which was
 # the canonical copy shared by the backup scripts. Behaviour is unchanged.
 #
 # This is NOT a standalone program: source it (or runlib.sh) at the top of a

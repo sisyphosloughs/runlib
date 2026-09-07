@@ -3,7 +3,7 @@
 # notify.sh — the Telegram notification.
 #
 # Origin: telegram_configured/telegram_send taken verbatim from
-# lib/common-lib.sh of docker-db-dump. New here: notify_init, which reads the
+# lib/common-lib.sh of backup-docker-db. New here: notify_init, which reads the
 # credentials from ONE file shared by every script on the host instead of a
 # copy of the token in each global.conf.
 #
