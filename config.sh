@@ -3,8 +3,8 @@
 # config.sh — the "one *.conf per object" configuration loader.
 #
 # Origin: the common skeleton of three loaders that had grown apart —
-# load_stacks() (docker-db-dump.sh), load_paths() (tar-backup.sh) and
-# load_instances() (restic-backup.sh). They agreed on everything except the
+# load_stacks() (backup-docker-db.sh), load_paths() (backup-tar.sh) and
+# load_instances() (backup-restic-push.sh). They agreed on everything except the
 # domain checks, so those are the part that stays with the caller.
 #
 # The contract for a configuration directory is unchanged: one <name>.conf per

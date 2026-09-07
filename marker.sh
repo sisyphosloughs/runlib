@@ -3,7 +3,7 @@
 # marker.sh — the completion marker a run publishes for whatever consumes its
 # output (a backup host pulling the tree, a monitoring check).
 #
-# Origin: write_marker() from docker-db-dump.sh and tar-backup.sh, which were
+# Origin: write_marker() from backup-docker-db.sh and backup-tar.sh, which were
 # word-for-word identical apart from three key names — those are now arguments.
 #
 # Needs: log.sh.

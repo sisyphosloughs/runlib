@@ -2,7 +2,7 @@
 #
 # lock.sh — advisory single-instance lock for a run.
 #
-# Origin: acquire_lock() taken verbatim from docker-db-dump.sh (tar-backup.sh
+# Origin: acquire_lock() taken verbatim from backup-docker-db.sh (backup-tar.sh
 # carried a byte-identical copy). Only the lock file became a parameter, so a
 # script that keeps no LOG_DIR can still use it.
 #

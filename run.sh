@@ -3,7 +3,7 @@
 # run.sh — the skeleton of an unattended run: start, signal handling, the
 # per-object worker loop, and the closing summary + notification + exit code.
 #
-# Origin: docker-db-dump.sh and tar-backup.sh carried this skeleton twice, word
+# Origin: backup-docker-db.sh and backup-tar.sh carried this skeleton twice, word
 # for word, differing only in the nouns they used. Those nouns are now
 # variables, so each script keeps speaking its own language while running the
 # same code.
