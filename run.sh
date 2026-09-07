@@ -16,6 +16,17 @@
 #   RUN_ABORT_HINT  what an abort means for whoever consumes the output
 #   RUN_USES_MARKER 1 if the run publishes a completion marker (default 1)
 #
+# Optional, for a run whose summary needs more than the common shape:
+#   RUN_TOTAL       how many objects were attempted, if that is not simply the
+#                   number of loaded instances (a script looping over something
+#                   else — repositories, say — sets its own count)
+#   RUN_DATA_TEXT   replaces the "Data:" value, for a run where one byte count
+#                   does not tell the story ("358.7 MB processed, 142.7 MB added")
+#   RUN_EXTRA       extra lines between the count and "Data:", each ending in a
+#                   newline. Use it to state WHAT was covered — a summary that
+#                   never names its scope cannot show that something fell out of
+#                   it.
+#
 # State it owns (read by the caller, e.g. to decide about the marker):
 #   START_EPOCH HOSTNAME_SHORT CLEAN_EXIT RUN_REF
 #   OK_INSTANCES[] INSTANCE_RESULTS[] TOTAL_BYTES MARKER_NOTE
@@ -143,14 +154,16 @@ run_finish() {
   # Summary to the log, one notification, and the run's exit code. Never
   # returns.
   local end_epoch duration_s duration_h err_count total ok results="" r e msg
-  local marker_log="" marker_msg=""
+  local marker_log="" marker_msg="" data_text extra
 
   end_epoch="$(date +%s)"
   duration_s="$((end_epoch - START_EPOCH))"
   duration_h="$(human_duration "$duration_s")"
   err_count="${#ERRORS[@]}"
-  total="${#INSTANCE_NAMES[@]}"
+  total="${RUN_TOTAL:-${#INSTANCE_NAMES[@]}}"
   ok="${#OK_INSTANCES[@]}"
+  data_text="${RUN_DATA_TEXT:-$(human_bytes "$TOTAL_BYTES")}"
+  extra="${RUN_EXTRA:-}"
 
   log_info "--- Summary ---"
   for r in "${INSTANCE_RESULTS[@]+"${INSTANCE_RESULTS[@]}"}"; do
@@ -172,13 +185,13 @@ run_finish() {
   log_info "${RUN_LOG_NAME:-Run} completed. $err_count errors. Duration: ${duration_h}${marker_log}"
 
   if [[ "$err_count" -eq 0 ]]; then
-    msg="$(printf '✅ [%s] %s completed\nDuration: %s\n%s: %d/%d successful\nData: %s\n%s\n%s' \
+    msg="$(printf '✅ [%s] %s completed\nDuration: %s\n%s: %d/%d successful\n%sData: %s\n%s\n%s' \
       "$HOSTNAME_SHORT" "${RUN_WHAT:-Run}" "$duration_h" "${RUN_UNIT:-Objects}" \
-      "$ok" "$total" "$(human_bytes "$TOTAL_BYTES")" "$marker_msg" "$results")"
+      "$ok" "$total" "$extra" "$data_text" "$marker_msg" "$results")"
   else
-    msg="$(printf '❌ [%s] %s completed with errors\nDuration: %s\n%s: %d/%d successful\nErrors: %d\n%s\n%s\n--- Log (last 50 lines) ---\n%s' \
+    msg="$(printf '❌ [%s] %s completed with errors\nDuration: %s\n%s: %d/%d successful\nErrors: %d\n%s%s\n%s\n--- Log (last 50 lines) ---\n%s' \
       "$HOSTNAME_SHORT" "${RUN_WHAT:-Run}" "$duration_h" "${RUN_UNIT:-Objects}" \
-      "$ok" "$total" "$err_count" "$marker_msg" "$results" "$(log_tail)")"
+      "$ok" "$total" "$err_count" "$extra" "$marker_msg" "$results" "$(log_tail)")"
   fi
   telegram_send "$msg"
 
