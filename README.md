@@ -45,7 +45,7 @@ git add lib/runlib && git commit -m "runlib: update"
 | `notify.sh` | `notify_init`, `telegram_configured`, `telegram_send`, `notify_check_binaries` |
 | `config.sh` | `instances_load`, `instances_record` — the "one *.conf per object" loader |
 | `run.sh` | `run_init`, `run_traps`, `run_end`, `run_worker_loop`, `run_finish` |
-| `marker.sh` | `write_marker` — an atomically published completion marker |
+| `marker.sh` | `write_marker` — an atomically published completion marker; `marker_value`, `marker_age` — read one back on the consumer side |
 
 `runlib.sh` sources all of them in the order they depend on each other.
 

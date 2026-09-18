@@ -26,6 +26,11 @@
 #                   newline. Use it to state WHAT was covered — a summary that
 #                   never names its scope cannot show that something fell out of
 #                   it.
+#   RUN_BYTES_FN    a function "<fn> <name> <index> <outdir>" that prints how
+#                   many bytes one object produced, for a script whose output
+#                   is not "new files at the top of <outdir>" (a mirror keeps
+#                   the source's mtimes, so nothing there is newer than the
+#                   run). Default: bytes_newer_than <outdir> RUN_REF.
 #
 # State it owns (read by the caller, e.g. to decide about the marker):
 #   START_EPOCH HOSTNAME_SHORT CLEAN_EXIT RUN_REF
@@ -135,7 +140,12 @@ run_worker_loop() {
     "$worker_fn" "$name" "$conf" "$idx" 2>&1 | tee -a "$LOG_FILE"
     rc="${PIPESTATUS[0]}"
 
-    bytes="$(bytes_newer_than "$outdir" "$RUN_REF")"
+    if [[ -n "${RUN_BYTES_FN:-}" ]]; then
+      bytes="$("$RUN_BYTES_FN" "$name" "$idx" "$outdir")"
+      [[ "$bytes" =~ ^[0-9]+$ ]] || bytes=0
+    else
+      bytes="$(bytes_newer_than "$outdir" "$RUN_REF")"
+    fi
     dur="$(human_duration "$(( $(date +%s) - start ))")"
 
     if [[ "$rc" -eq 0 ]]; then

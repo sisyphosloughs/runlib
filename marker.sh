@@ -53,3 +53,35 @@ write_marker() {
   log_info "Completion marker written: $marker_path"
   return 0
 }
+
+marker_value() {
+  # marker_value <marker-file> <key> — print the value of <key>; the last
+  # occurrence wins, as it would when the file is sourced. Prints nothing and
+  # returns 1 if the file cannot be read or holds no such key, so a caller can
+  # tell "empty value" from "absent".
+  #
+  # The counterpart of write_marker for the consumer side: a script that pulls
+  # another script's output can check the marker BEFORE it copies, instead of
+  # mirroring a half-written tree. Parsed line by line rather than sourced —
+  # the marker comes from another host and is data, not code.
+  local file="$1" key="$2" line found=1 value=""
+  [[ -r "$file" ]] || return 1
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    case "$line" in
+      "$key="*) value="${line#*=}"; found=0 ;;
+    esac
+  done < "$file"
+  [[ "$found" -eq 0 ]] && printf '%s' "$value"
+  return "$found"
+}
+
+marker_age() {
+  # marker_age <marker-file> — print the marker's age in seconds, from its
+  # completed_epoch. Returns 1 (printing nothing) if there is no usable
+  # completed_epoch. What age is "too old" is the caller's decision: a nightly
+  # producer's marker is fine at 20 hours and suspect at 30.
+  local epoch
+  epoch="$(marker_value "$1" completed_epoch)" || return 1
+  [[ "$epoch" =~ ^[0-9]+$ ]] || return 1
+  printf '%d' "$(( $(date +%s) - epoch ))"
+}
